@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 import nemo.collections.asr as nemo_asr
 
-MODEL_NAME = "nvidia/parakeet-tdt-0.6b-v3"
+MODEL_NAME = "joentze/parakeet-tdt-sg-english"
 
 
 def get_logger() -> logging.Logger:
@@ -34,7 +34,8 @@ async def lifespan(app: FastAPI):
             device = torch.device("cpu")
         logger.info("Using device: %s", device)
 
-        asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=MODEL_NAME)
+        asr_model = nemo_asr.models.ASRModel.from_pretrained(
+            model_name=MODEL_NAME)
         asr_model.change_attention_model(
             self_attention_model="rel_pos_local_attn",
             att_context_size=[256, 256],

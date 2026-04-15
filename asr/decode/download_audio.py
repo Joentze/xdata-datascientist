@@ -7,6 +7,7 @@ import requests
 from pydub import AudioSegment
 
 AUDIO_BASE = "https://a3s.fi/swift/v1/YCSEP_v2"
+CLIP_API = "https://ycsep-fastapi-viewer-ycsep-test.2.rahtiapp.fi/clip"
 
 
 def parse_viewer_url(viewer_url: str) -> str:
@@ -48,6 +49,40 @@ def download_audio(
 
     audio = AudioSegment.from_file(io.BytesIO(resp.content), format="wav")
     audio.export(dest, format="mp3")
+    print(f"Saved: {dest}")
+    return dest
+
+
+def clip_filename(url: str, start: float, end: float) -> str:
+    stem = Path(unquote(urlparse(url).path).split("/")[-1]).stem
+    return f"{stem}_{int(start)}_{int(end)}.wav"
+
+
+def download_clip(
+    url: str,
+    start: float,
+    end: float,
+    output_dir: str | Path = "audio",
+    timeout: int = 60,
+) -> Path:
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    dest = output_dir / clip_filename(url, start, end)
+
+    if dest.exists():
+        print(f"Already exists, skipping: {dest.name}")
+        return dest
+
+    print(f"Downloading clip: {url} [{start}–{end}]")
+    resp = requests.get(
+        CLIP_API,
+        params={"url": url, "start": start, "end": end, "fmt": "wav"},
+        timeout=timeout,
+    )
+    resp.raise_for_status()
+
+    dest.write_bytes(resp.content)
     print(f"Saved: {dest}")
     return dest
 
