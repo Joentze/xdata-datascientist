@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+torch
+nemo_toolkit[asr]
+librosa
+numpy
+pydantic
+python-multipart
