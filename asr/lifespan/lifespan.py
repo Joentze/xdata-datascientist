@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 import nemo.collections.asr as nemo_asr
 
-MODEL_NAME = "joentze/parakeet-tdt-sg-english"
+MODEL_NAME = "nvidia/parakeet-tdt-0.6b-v3"
 
 
 def get_logger() -> logging.Logger:
