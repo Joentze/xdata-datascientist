@@ -11,8 +11,7 @@ import torch
 from pyannote.audio import Inference, Model
 from scipy.spatial.distance import cdist
 
-BASE_DIR = Path(
-    "/Users/tanjoen/Documents/xdata-datascientist/speaker-detection")
+BASE_DIR = Path(__file__).resolve().parent
 SEGMENTS_JSON = BASE_DIR / "data" / "podcast_segments.json"
 PODCASTS_DIR = BASE_DIR / "data" / "podcasts"
 SPEAKER_REF = BASE_DIR / "speaker_ref.wav"
@@ -60,6 +59,11 @@ def save_progress(done: dict) -> None:
 
 
 def main():
+    """
+    downloads podcast file, generates embeddings from sliding window of 1 min in length, 
+    matches with the 1min sample audio given. if the similarity exceeds 0.5 threshold it will
+    be treated as a match.
+    """
     hf_token = os.environ.get("HF_TOKEN")
     if not hf_token:
         print("Error: set the HF_TOKEN environment variable with your Hugging Face access token.")
@@ -90,7 +94,7 @@ def main():
         print("All podcasts already processed.")
         return
 
-    # ── Model ──────────────────────────────────────────────────────────
+
     print("Loading pyannote/embedding model...")
     model = Model.from_pretrained(
         "pyannote/embedding", use_auth_token=hf_token)
@@ -110,13 +114,13 @@ def main():
     whole_inference.to(torch.device(device))
     print(f"Inference device: {device}")
 
-    # ── Embed speaker reference ────────────────────────────────────────
+
     print(f"Embedding speaker reference: {SPEAKER_REF.name}")
     ref_embedding = whole_inference(str(SPEAKER_REF))
     ref_embedding = np.array(ref_embedding).reshape(1, -1)
     print(f"Reference embedding shape: {ref_embedding.shape}")
 
-    # ── Prefetch download pool ─────────────────────────────────────────
+
     PODCASTS_DIR.mkdir(parents=True, exist_ok=True)
     dl_pool = ThreadPoolExecutor(max_workers=DOWNLOAD_WORKERS)
 
@@ -126,7 +130,7 @@ def main():
         dl_futures[key] = dl_pool.submit(
             download_wav, podcast["wav_url"], local)
 
-    # ── Main loop ──────────────────────────────────────────────────────
+
     processed = len(done)
     matches: list[dict] = [v for v in done.values() if v is not None]
 
